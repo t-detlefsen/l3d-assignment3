@@ -93,16 +93,20 @@ def render_images(
 
         torch.cuda.empty_cache()
         camera = camera.to(device)
-        xy_grid = get_pixels_from_image(image_size, camera) # TODO (Q1.3): implement in ray_utils.py
-        ray_bundle = get_rays_from_pixels(xy_grid, image_size, camera) # TODO (Q1.3): implement in ray_utils.py
+        xy_grid = get_pixels_from_image(image_size, camera) # (Q1.3): implement in ray_utils.py
+        ray_bundle = get_rays_from_pixels(xy_grid, image_size, camera) # (Q1.3): implement in ray_utils.py
 
-        # TODO (Q1.3): Visualize xy grid using vis_grid
+        # (Q1.3): Visualize xy grid using vis_grid
         if cam_idx == 0 and file_prefix == '':
-            pass
+            vis = vis_grid(xy_grid, image_size)
+            im = Image.fromarray(np.uint8(vis*255))
+            im.save("images/grid.png")
 
-        # TODO (Q1.3): Visualize rays using vis_rays
+        # (Q1.3): Visualize rays using vis_rays
         if cam_idx == 0 and file_prefix == '':
-            pass
+            vis = vis_rays(ray_bundle, image_size)
+            im = Image.fromarray(np.uint8(vis*255))
+            im.save("images/rays.png")
         
         # TODO (Q1.4): Implement point sampling along rays in sampler.py
         pass
@@ -376,4 +380,3 @@ def main(cfg: DictConfig):
 
 if __name__ == "__main__":
     main()
-

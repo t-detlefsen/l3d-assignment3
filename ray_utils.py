@@ -121,7 +121,7 @@ def get_rays_from_pixels(xy_grid, image_size, camera):
     W, H = image_size[0], image_size[1]
 
     # (Q1.3): Map pixels to points on the image plane at Z=1
-    ndc_points = xy_grid
+    ndc_points = xy_grid.to('cuda')
 
     ndc_points = torch.cat(
         [
