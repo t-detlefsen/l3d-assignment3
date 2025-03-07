@@ -117,7 +117,7 @@ def render_images(
         if cam_idx == 0 and file_prefix == '':
             render_points("images/sample_points.png", ray_bundle.sample_points.reshape(1, -1, 3))
 
-        # TODO (Q1.5): Implement rendering in renderer.py
+        # (Q1.5): Implement rendering in renderer.py
         out = model(ray_bundle)
 
         # Return rendered features (colors)
@@ -128,9 +128,11 @@ def render_images(
         )
         all_images.append(image)
 
-        # TODO (Q1.5): Visualize depth
+        # (Q1.5): Visualize depth
         if cam_idx == 2 and file_prefix == '':
-            pass
+            vis = out['depth'].reshape(image_size[0], image_size[1])
+            im = Image.fromarray(np.uint8(vis*255))
+            im.save("images/rays.png")
 
         # Save
         if save:
