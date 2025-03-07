@@ -130,9 +130,10 @@ def render_images(
 
         # (Q1.5): Visualize depth
         if cam_idx == 2 and file_prefix == '':
-            vis = out['depth'].reshape(image_size[0], image_size[1])
-            im = Image.fromarray(np.uint8(vis*255))
-            im.save("images/rays.png")
+            vis = out['depth'].reshape(image_size[0], image_size[1]).cpu().detach()
+            plt.imsave("images/transmittance.png", vis)
+            # im = Image.fromarray(np.uint8(vis*255))
+            # im.save("images/transmittance.png")
 
         # Save
         if save:

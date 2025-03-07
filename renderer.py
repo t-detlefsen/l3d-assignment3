@@ -22,16 +22,17 @@ class VolumeRenderer(torch.nn.Module):
         rays_density: torch.Tensor,
         eps: float = 1e-10
     ):
-        # TODO (1.5): Compute transmittance using the equation described in the README
-        T = torch.ones((rays_density.shape[0], 1)).to("cuda")
+        # (1.5): Compute transmittance using the equation described in the README
+        T = torch.ones((rays_density.shape[0], 1)).to("cuda") # Transmittance for each ray segment
 
+        # Loop over all ray segments
         weights = []
-        for density, delta in zip(rays_density, deltas):
+        for i in range(rays_density.shape[1]):
             weights.append(T)
-            T = T * torch.exp(-density * delta + eps)
+            T = T * torch.exp(-rays_density[:, i] * deltas[:, i] + eps) # EQ 2 from README
 
-        # TODO (1.5): Compute weight used for rendering from transmittance and alpha
-        weights = torch.stack(weights, dim=1) * (1-torch.exp(-rays_density * deltas + eps))
+        # (1.5): Compute weight used for rendering from transmittance and alpha
+        weights = torch.stack(weights, dim=1) * (1-torch.exp(-rays_density * deltas + eps)) # EQ 1 from README
 
         return weights
     
@@ -41,7 +42,7 @@ class VolumeRenderer(torch.nn.Module):
         rays_feature: torch.Tensor
     ):
         # (1.5): Aggregate (weighted sum of) features using weights
-        feature = torch.sum(rays_feature * weights, dim=1)
+        feature = torch.sum(rays_feature * weights, dim=1) # EQ 1 from README
 
         return feature
 
