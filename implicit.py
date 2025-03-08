@@ -298,7 +298,61 @@ class NeuralRadianceField(torch.nn.Module):
         embedding_dim_xyz = self.harmonic_embedding_xyz.output_dim
         embedding_dim_dir = self.harmonic_embedding_dir.output_dim
 
+        self.layers_xyz = torch.nn.ModuleList()
+        for i in range(cfg.n_layers_xyz):
+            if i == 0:
+                self.layers_xyz.append(torch.nn.Linear(embedding_dim_xyz, cfg.n_hidden_neurons_xyz))
+            elif i == (cfg.n_layers_xyz // 2 + 1):
+                self.layers_xyz.append(torch.nn.Linear(embedding_dim_xyz + cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz))
+            else:
+                self.layers_xyz.append(torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz))
+            
+        self.ReLU = torch.nn.ReLU()
+
+        # No View Dependence
+        self.layers_sigma = torch.nn.Sequential(
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz, 1),
+            torch.nn.ReLU()
+        )
+
+        # No View Dependence
+        self.layers_rgb = torch.nn.Sequential(
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz / 2),
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz / 2, 3),
+            torch.nn.Sigmoid()
+        )
+
+        self.rgb = torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz)
+
         pass
+
+    def forward(self, ray_bundle):
+        # Sample ray_bundle
+        embed_points = self.harmonic_embedding_xyz(ray_bundle.sample_points)
+        embed_dir = self.harmonic_embedding_dir(ray_bundle.directions)
+        
+        # Pass through network
+        for i, layer in enumerate(self.layers_xyz):
+            if i == 0:
+                x = layer(embed_points)
+            elif i == (len(self.layers_xyz) // 2 + 1):
+                x = layer(torch.cat((x, embed_points), dim=1))
+            else:
+                x = layer(x)
+
+            if i != len(self.layers_xyz) - 1:
+                x = self.ReLU(x)
+
+        density = self.layers_sigma(x)
+        feature = self.layers_rgb(x)
+
+        # Split output into density and feature
+        out = {
+            'density': density,
+            'feature': feature
+        }
+
+        return out
 
 
 class NeuralSurface(torch.nn.Module):
