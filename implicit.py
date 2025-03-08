@@ -317,14 +317,12 @@ class NeuralRadianceField(torch.nn.Module):
 
         # No View Dependence
         self.layers_rgb = torch.nn.Sequential(
-            torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz / 2),
-            torch.nn.Linear(cfg.n_hidden_neurons_xyz / 2, 3),
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz // 2),
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz // 2, 3),
             torch.nn.Sigmoid()
         )
 
         self.rgb = torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz)
-
-        pass
 
     def forward(self, ray_bundle):
         # Sample ray_bundle
@@ -336,7 +334,7 @@ class NeuralRadianceField(torch.nn.Module):
             if i == 0:
                 x = layer(embed_points)
             elif i == (len(self.layers_xyz) // 2 + 1):
-                x = layer(torch.cat((x, embed_points), dim=1))
+                x = layer(torch.cat((x, embed_points), dim=2))
             else:
                 x = layer(x)
 
