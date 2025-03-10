@@ -395,9 +395,9 @@ class NeuralSurface(torch.nn.Module):
         self.layers_rgb = torch.nn.ModuleList()
         for i in range(cfg.n_layers_color):
             if i == 0:
-                self.layers_xyz.append(torch.nn.Linear(embedding_dim_xyz + cfg.n_hidden_neurons_distance, cfg.n_hidden_neurons_color))
+                self.layers_rgb.append(torch.nn.Linear(embedding_dim_xyz + cfg.n_hidden_neurons_distance, cfg.n_hidden_neurons_color))
             else:
-                self.layers_xyz.append(torch.nn.Linear(cfg.n_hidden_neurons_color, cfg.n_hidden_neurons_color))
+                self.layers_rgb.append(torch.nn.Linear(cfg.n_hidden_neurons_color, cfg.n_hidden_neurons_color))
 
         self.layers_rgb_out = torch.nn.Sequential(
             torch.nn.Linear(cfg.n_hidden_neurons_color, 3),
