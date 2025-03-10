@@ -149,7 +149,7 @@ class SphereTracingRenderer(torch.nn.Module):
         points = origins
         for i in range(self.max_iters):
             t = implicit_fn(points)
-            points = origins + t * directions
+            points = points + t * directions
             mask = t < 1e-6
             
             if torch.sum(mask) == points.shape[0]:
