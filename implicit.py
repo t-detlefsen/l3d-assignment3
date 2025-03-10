@@ -315,14 +315,23 @@ class NeuralRadianceField(torch.nn.Module):
             torch.nn.ReLU()
         )
 
-        # No View Dependence
         self.layers_rgb = torch.nn.Sequential(
             torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz // 2),
             torch.nn.Linear(cfg.n_hidden_neurons_xyz // 2, 3),
             torch.nn.Sigmoid()
         )
 
-        self.rgb = torch.nn.Linear(cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz)
+        # View Dependence
+        self.layers_sigma_view = torch.nn.Sequential(
+            torch.nn.Linear(embedding_dim_dir + cfg.n_hidden_neurons_xyz, 1),
+            torch.nn.ReLU()
+        )
+
+        self.layers_rgb_view = torch.nn.Sequential(
+            torch.nn.Linear(embedding_dim_dir + cfg.n_hidden_neurons_xyz, cfg.n_hidden_neurons_xyz // 2),
+            torch.nn.Linear(cfg.n_hidden_neurons_xyz // 2, 3),
+            torch.nn.Sigmoid()
+        )
 
     def forward(self, ray_bundle):
         # Sample ray_bundle
@@ -341,8 +350,13 @@ class NeuralRadianceField(torch.nn.Module):
             if i != len(self.layers_xyz) - 1:
                 x = self.ReLU(x)
 
-        density = self.layers_sigma(x)
-        feature = self.layers_rgb(x)
+        # # No View Dependence
+        # density = self.layers_sigma(x)
+        # feature = self.layers_rgb(x)
+
+        # View Dependence
+        density = self.layers_sigma_view(torch.cat((x, embed_dir.unsqueeze(1).repeat(1, x.shape[1], 1)), dim=2))
+        feature = self.layers_rgb_view(torch.cat((x, embed_dir.unsqueeze(1).repeat(1, x.shape[1], 1)), dim=2))
 
         # Split output into density and feature
         out = {
