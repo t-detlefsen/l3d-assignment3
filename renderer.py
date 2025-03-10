@@ -140,12 +140,22 @@ class SphereTracingRenderer(torch.nn.Module):
                     the point can be arbitrary.
             mask: N_rays X 1 (boolean tensor) denoting which of the input rays intersect the surface.
         '''
-        # TODO (Q5): Implement sphere tracing
+        # (Q5): Implement sphere tracing
         # 1) Iteratively update points and distance to the closest surface
         #   in order to compute intersection points of rays with the implicit surface
         # 2) Maintain a mask with the same batch dimension as the ray origins,
         #   indicating which points hit the surface, and which do not
-        pass
+        
+        points = origins
+        for i in range(self.max_iters):
+            t = implicit_fn(points)
+            points = origins + t * directions
+            mask = t < 1e-6
+            
+            if torch.sum(mask) == points.shape[0]:
+                break
+
+        return points, mask
 
     def forward(
         self,
