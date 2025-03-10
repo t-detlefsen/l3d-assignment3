@@ -373,7 +373,7 @@ class NeuralSurface(torch.nn.Module):
         cfg,
     ):
         super().__init__()
-        # TODO (Q6): Implement Neural Surface MLP to output per-point SDF
+        # (Q6): Implement Neural Surface MLP to output per-point SDF
         self.harmonic_embedding_xyz = HarmonicEmbedding(3, cfg.n_harmonic_functions_xyz)
 
         embedding_dim_xyz = self.harmonic_embedding_xyz.output_dim
@@ -398,7 +398,7 @@ class NeuralSurface(torch.nn.Module):
         points
     ):
         '''
-        TODO: Q6
+        Q6
         Output:
             distance: N X 1 Tensor, where N is number of input points
         '''
@@ -410,7 +410,7 @@ class NeuralSurface(torch.nn.Module):
             if i == 0:
                 x = layer(embed_points)
             elif i == (len(self.layers_xyz) // 2 + 1):
-                x = layer(torch.cat((x, embed_points), dim=2))
+                x = layer(torch.cat((x, embed_points), dim=1))
             else:
                 x = layer(x)
 

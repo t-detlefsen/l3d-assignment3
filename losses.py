@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 
 def eikonal_loss(gradients):
-    return torch.mean(torch.norm(gradients) - 1)
+    return torch.mean(torch.square(torch.norm(gradients, dim = 1) - 1))
 
 def sphere_loss(signed_distance, points, radius=1.0):
     return torch.square(signed_distance[..., 0] - (torch.norm(points, dim=-1) - radius)).mean()

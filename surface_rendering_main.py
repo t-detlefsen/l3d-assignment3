@@ -233,7 +233,7 @@ def train_points(
 
             # Get distances and enforce point cloud loss
             distances, gradients = model.implicit_fn.get_distance_and_gradient(points)
-            loss = None # TODO (Q6): Point cloud SDF loss on distances
+            loss = torch.mean(torch.square(distances)) # Point cloud SDF loss on distances # (Q6): Point cloud SDF loss on distances
             point_loss = loss
 
             # Sample random points in bounding box
@@ -244,7 +244,7 @@ def train_points(
             # Get sdf gradients and enforce eikonal loss
             eikonal_distances, eikonal_gradients = model.implicit_fn.get_distance_and_gradient(eikonal_points)
             loss += torch.exp(-1e2 * torch.abs(eikonal_distances)).mean() * cfg.training.inter_weight
-            loss += eikonal_loss(eikonal_gradients) * cfg.training.eikonal_weight # TODO (Q6): Implement eikonal loss
+            loss += eikonal_loss(eikonal_gradients) * cfg.training.eikonal_weight # (Q6): Implement eikonal loss
 
             # Take the training step.
             optimizer.zero_grad()
