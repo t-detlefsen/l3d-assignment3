@@ -284,7 +284,7 @@ class MLPWithInputSkips(torch.nn.Module):
         return y
 
 
-# TODO (Q3.1): Implement NeRF MLP
+# (Q3.1): Implement NeRF MLP
 class NeuralRadianceField(torch.nn.Module):
     def __init__(
         self,
@@ -391,7 +391,18 @@ class NeuralSurface(torch.nn.Module):
 
         self.layers_sigma = torch.nn.Linear(cfg.n_hidden_neurons_distance, 1)
 
-        # TODO (Q7): Implement Neural Surface MLP to output per-point color
+        # (Q7): Implement Neural Surface MLP to output per-point color
+        self.layers_rgb = torch.nn.ModuleList()
+        for i in range(cfg.n_layers_color):
+            if i == 0:
+                self.layers_xyz.append(torch.nn.Linear(embedding_dim_xyz + cfg.n_hidden_neurons_distance, cfg.n_hidden_neurons_color))
+            else:
+                self.layers_xyz.append(torch.nn.Linear(cfg.n_hidden_neurons_color, cfg.n_hidden_neurons_color))
+
+        self.layers_rgb_out = torch.nn.Sequential(
+            torch.nn.Linear(cfg.n_hidden_neurons_color, 3),
+            torch.nn.Sigmoid()
+        )
 
     def get_distance(
         self,
@@ -426,24 +437,71 @@ class NeuralSurface(torch.nn.Module):
         points
     ):
         '''
-        TODO: Q7
+        Q7
         Output:
             distance: N X 3 Tensor, where N is number of input points
         '''
         points = points.view(-1, 3)
-        pass
+        embed_points = self.harmonic_embedding_xyz(points)
+
+        # Pass through network
+        for i, layer in enumerate(self.layers_xyz):
+            if i == 0:
+                x = layer(embed_points)
+            elif i == (len(self.layers_xyz) // 2 + 1):
+                x = layer(torch.cat((x, embed_points), dim=1))
+            else:
+                x = layer(x)
+
+            if i != len(self.layers_xyz) - 1:
+                x = self.ReLU(x)
+
+        for i, layer in enumerate(self.layers_rgb):
+            if i == 0:
+                x = layer(torch.cat((x, embed_points), dim=1))
+            else:
+                x = layer(x)
+
+        x = self.layers_rgb_out(x)
+
+        return x    
     
     def get_distance_color(
         self,
         points
     ):
         '''
-        TODO: Q7
+        Q7
         Output:
             distance, points: N X 1, N X 3 Tensors, where N is number of input points
         You may just implement this by independent calls to get_distance, get_color
             but, depending on your MLP implementation, it maybe more efficient to share some computation
         '''
+        points = points.view(-1, 3)
+        embed_points = self.harmonic_embedding_xyz(points)
+
+        for i, layer in enumerate(self.layers_xyz):
+            if i == 0:
+                x = layer(embed_points)
+            elif i == (len(self.layers_xyz) // 2 + 1):
+                x = layer(torch.cat((x, embed_points), dim=1))
+            else:
+                x = layer(x)
+
+            if i != len(self.layers_xyz) - 1:
+                x = self.ReLU(x)
+
+        distance = self.layers_sigma(x)
+
+        for i, layer in enumerate(self.layers_rgb):
+            if i == 0:
+                x = layer(torch.cat((x, embed_points), dim=1))
+            else:
+                x = layer(x)
+
+        color = self.layers_rgb_out(x)
+
+        return distance, color
         
     def forward(self, points):
         return self.get_distance(points)

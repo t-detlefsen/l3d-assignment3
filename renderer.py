@@ -204,8 +204,9 @@ class SphereTracingRenderer(torch.nn.Module):
 
 
 def sdf_to_density(signed_distance, alpha, beta):
-    # TODO (Q7): Convert signed distance to density with alpha, beta parameters
-    pass
+    # (Q7): Convert signed distance to density with alpha, beta parameters
+    dist = torch.distributions.laplace.Laplace(0, beta)
+    return alpha * dist.cdf(-signed_distance)
 
 class VolumeSDFRenderer(VolumeRenderer):
     def __init__(
