@@ -16,6 +16,8 @@ from torch.utils.data import Dataset
 
 import matplotlib.pyplot as plt
 
+torch.manual_seed(0)
+idxs = torch.randperm(100)[:15]
 
 DEFAULT_DATA_ROOT = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "data"
@@ -121,6 +123,9 @@ def get_nerf_datasets(
     ]
 
     train_idx, val_idx, test_idx = train_data["split"]
+    # # (Q8) Get subset of training views
+    # train_idx = train_idx[idxs]
+    # print(train_idx)
 
     train_dataset, val_dataset, test_dataset = [
         ListDataset(
